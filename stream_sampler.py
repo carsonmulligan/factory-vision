@@ -5,13 +5,23 @@ from io import BytesIO
 from tqdm import tqdm
 from config import HF_TOKEN
 
+# Cache the dataset connection to avoid reloading
+_dataset_cache = None
+
+def get_dataset():
+    """Lazy load and cache the dataset connection."""
+    global _dataset_cache
+    if _dataset_cache is None:
+        _dataset_cache = load_dataset(
+            "builddotai/Egocentric-10K",
+            streaming=True,
+            split="train",
+            token=HF_TOKEN
+        )
+    return _dataset_cache
+
 def stream_random_clips(n=5):
-    ds = load_dataset(
-        "builddotai/Egocentric-10K",
-        streaming=True,
-        split="train",
-        token=HF_TOKEN
-    )
+    ds = get_dataset()
     ds = ds.shuffle(buffer_size=1000, seed=random.randint(0, 10000))
     return [next(iter(ds)) for _ in range(n)]
 

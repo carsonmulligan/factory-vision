@@ -11,7 +11,8 @@ st.caption("Streaming real factory workers • GPT-4o-mini vision • <$5 total"
 
 if st.button("Load Random Worker Clip"):
     with st.spinner("Streaming clip..."):
-        clip = random.choice(stream_random_clips(10))
+        clips = stream_random_clips(1)
+        clip = clips[0]
         frames = extract_frames(clip['mp4'], max_frames=1)
         frame = frames[0]
 
