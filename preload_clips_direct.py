@@ -1,4 +1,11 @@
 """
+STEPS
+1. create a .env file 
+2. create a HF_TOKEN=...
+3. go to https://huggingface.co/settings/tokens and make a token 
+4. pip install -r requirements.txt
+5. python preload_clips_direct.py
+
 RECOMMENDED: Super fast clip preloader that downloads tar files directly from HuggingFace.
 Bypasses the slow dataset enumeration entirely by fetching specific tar files.
 
