@@ -20,7 +20,11 @@ import json
 import tarfile
 import requests
 from io import BytesIO
-from src.config import HF_TOKEN
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 CLIPS_DIR = "sample_clips"
 
@@ -37,6 +41,14 @@ CLIPS_1_5_TARS = [
 
 def preload_clips_direct(download_all=False):
     """Download clips by directly fetching tar files from HuggingFace."""
+
+    # Validate HF_TOKEN is loaded
+    if not HF_TOKEN:
+        print("\n✗ Error: HF_TOKEN not found!")
+        print("Please ensure you have a .env file with HF_TOKEN=your_token")
+        print("Get your token from: https://huggingface.co/settings/tokens")
+        sys.exit(1)
+
     os.makedirs(CLIPS_DIR, exist_ok=True)
 
     # Select which clips to download
