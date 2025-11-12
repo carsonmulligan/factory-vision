@@ -1,0 +1,15 @@
+# Core ML/AI libraries
+openai>=1.0.0
+datasets[streaming]>=2.14.0
+
+# Video processing
+av>=10.0.0
+opencv-python>=4.8.0
+
+# Web framework
+streamlit>=1.28.0
+
+# Utilities
+python-dotenv>=1.0.0
+tqdm>=4.66.0
+requests>=2.31.0

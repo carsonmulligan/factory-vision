@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Factory Vision is a Python application that streams egocentric factory worker videos from the Egocentric-10K dataset on HuggingFace, extracts frames, and uses GPT-4o-mini vision API to analyze worker actions, tools, and safety compliance. The project emphasizes streaming-only (no local video storage) and cost-effectiveness.
+Factory Vision is a Python application that analyzes egocentric factory worker videos from the Egocentric-10K dataset on HuggingFace using GPT-4o-mini vision API to identify worker actions, tools, and safety compliance. The project emphasizes fast local loading and cost-effectiveness.
 
 ## Environment Setup
 
@@ -12,53 +12,81 @@ Virtual environment and dependencies:
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install 'datasets[streaming]' av openai streamlit python-dotenv tqdm opencv-python
+pip install -r requirements.txt
 ```
 
 Requires `.env` file with:
 - `OPENAI_API_KEY` - OpenAI API key for GPT-4o-mini vision
 - `HF_TOKEN` - HuggingFace token with dataset access for builddotai/Egocentric-10K
 
+**First-time setup:**
+```bash
+python preload_clips.py
+```
+Downloads 10 sample clips locally (~1-2 minutes, only needed once). This enables instant app loading.
+
 ## Running the Application
+
+**Interactive web interface (recommended):**
+```bash
+streamlit run app.py
+```
+Loads instantly from local clips, single-frame analysis with visual preview and real-time cost tracking.
 
 **Batch processing pipeline:**
 ```bash
 python main.py
 ```
-Processes 50 clips (configurable), outputs to `egocentric_analysis.json` with cost report.
-
-**Interactive web interface:**
-```bash
-streamlit run app.py
-```
-Real-time frame-by-frame analysis with visual feedback.
+Streams clips from HuggingFace (slow initial load), processes 50 clips (configurable), outputs to `egocentric_analysis.json` with cost report.
 
 ## Architecture
 
-The codebase follows a modular pipeline architecture:
+The codebase follows a modular structure optimized for LLM navigation:
 
-1. **config.py** - Central configuration and cost tracking constants. All configurable parameters (MAX_CLIPS, FRAMES_PER_CLIP, FRAME_INTERVAL_SEC, MAX_TOKENS) are defined here.
+```
+.
+├── src/                    # Core library modules
+│   ├── config.py          # Configuration and cost constants
+│   ├── stream_sampler.py  # Dataset streaming and frame extraction
+│   └── vision_analyzer.py # OpenAI vision API integration
+├── app.py                 # Streamlit web interface (loads from local clips)
+├── main.py                # Batch processing pipeline (streams from HuggingFace)
+├── preload_clips.py       # One-time setup script
+└── requirements.txt       # Dependencies
+```
 
-2. **stream_sampler.py** - Dataset streaming layer
-   - `stream_random_clips(n)` - Streams N random clips from HuggingFace dataset using shuffle buffer
+**Core modules (src/):**
+
+1. **src/config.py** - Central configuration and cost tracking constants. All configurable parameters (MAX_CLIPS, FRAMES_PER_CLIP, FRAME_INTERVAL_SEC, MAX_TOKENS) are defined here.
+
+2. **src/stream_sampler.py** - Dataset streaming layer
+   - `stream_random_clips(n)` - Streams N random clips from HuggingFace dataset using shuffle buffer with caching
    - `extract_frames(mp4_bytes, interval_sec, max_frames)` - Decodes MP4 bytes in-memory using PyAV, extracts frames at regular intervals
-   - No local file storage; all video processing happens in-memory
+   - Dataset connection caching prevents repeated slow file enumeration
 
-3. **vision_analyzer.py** - OpenAI vision API integration
+3. **src/vision_analyzer.py** - OpenAI vision API integration
    - `encode_frame(frame)` - Compresses frames to JPEG (85% quality) and base64 encodes
    - `analyze_frame(frame, prompt)` - Sends frame to GPT-4o-mini vision API with cost tracking
    - Returns structured response with description, cost, and token count
 
-4. **main.py** - Batch processing pipeline
-   - Streams MAX_CLIPS from dataset
+**Executable scripts (root):**
+
+4. **app.py** - Streamlit web interface
+   - Loads from local `sample_clips/` directory for instant startup
+   - Single-frame analysis with visual preview
+   - Real-time cost tracking
+   - Optional JSON append for saving results
+
+5. **main.py** - Batch processing pipeline
+   - Streams MAX_CLIPS from HuggingFace dataset
    - Extracts FRAMES_PER_CLIP frames per clip
    - Rate-limited API calls (0.1s delay)
    - Outputs JSON with factory_id, worker_id, frame-level analysis
 
-5. **app.py** - Streamlit web interface
-   - Single-frame analysis with visual preview
-   - Real-time cost tracking
-   - Optional JSON append for saving results
+6. **preload_clips.py** - Setup utility
+   - Downloads 10 random clips from dataset to `sample_clips/`
+   - Saves both MP4 files and JSON metadata
+   - Run once for fast app loading
 
 ## Key Design Patterns
 

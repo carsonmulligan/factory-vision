@@ -3,7 +3,7 @@ from datasets import load_dataset
 import av
 from io import BytesIO
 from tqdm import tqdm
-from config import HF_TOKEN
+from .config import HF_TOKEN
 
 # Cache the dataset connection to avoid reloading
 _dataset_cache = None

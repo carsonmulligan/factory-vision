@@ -2,7 +2,7 @@ import openai
 import base64
 import cv2
 import numpy as np
-from config import MODEL, MAX_TOKENS, COST_PER_1K_TOKENS_INPUT, COST_PER_1K_TOKENS_OUTPUT
+from .config import MODEL, MAX_TOKENS, COST_PER_1K_TOKENS_INPUT, COST_PER_1K_TOKENS_OUTPUT
 
 client = openai.OpenAI()
 

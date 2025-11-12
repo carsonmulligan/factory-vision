@@ -28,11 +28,11 @@ This project uses the [Egocentric-10K dataset](https://huggingface.co/datasets/b
    ```bash
    python3 -m venv venv
    source venv/bin/activate
-   pip install 'datasets[streaming]' av openai streamlit python-dotenv tqdm opencv-python
+   pip install -r requirements.txt
    ```
 
 3. **Configure API keys**
-   
+
    Edit `.env` file with your credentials:
    ```
    OPENAI_API_KEY=your_openai_key_here
@@ -42,6 +42,12 @@ This project uses the [Egocentric-10K dataset](https://huggingface.co/datasets/b
    - Get OpenAI API key: https://platform.openai.com/api-keys
    - Get HuggingFace token: https://hf.co/settings/tokens
    - Accept dataset terms: https://huggingface.co/datasets/builddotai/Egocentric-10K
+
+4. **Download sample clips (for web app)**
+   ```bash
+   python preload_clips_fast.py
+   ```
+   Downloads 10 clips locally (~30 seconds). Enables instant app loading.
 
 ## Usage
 
@@ -67,7 +73,7 @@ Click "Load Random Worker Clip" to stream and analyze frames in real-time.
 
 ## Configuration
 
-Edit `config.py` to adjust:
+Edit `src/config.py` to adjust:
 
 - `MAX_CLIPS` - Number of clips to process (default: 50)
 - `FRAMES_PER_CLIP` - Frames extracted per clip (default: 3)
@@ -93,12 +99,16 @@ Edit `config.py` to adjust:
 
 ```
 factory-vision/
-├── config.py           # Configuration and cost tracking
-├── stream_sampler.py   # Dataset streaming and frame extraction
-├── vision_analyzer.py  # GPT-4o-mini vision API integration
-├── main.py            # Batch processing pipeline
-├── app.py             # Streamlit web interface
-└── .env               # API credentials (not committed)
+├── src/                    # Core library modules
+│   ├── config.py          # Configuration and cost tracking
+│   ├── stream_sampler.py  # Dataset streaming and frame extraction
+│   └── vision_analyzer.py # GPT-4o-mini vision API integration
+├── app.py                 # Streamlit web interface
+├── main.py                # Batch processing pipeline
+├── preload_clips.py       # Setup script (streaming method)
+├── preload_clips_fast.py  # Setup script (API method, faster)
+├── requirements.txt       # Dependencies
+└── .env                   # API credentials (not committed)
 ```
 
 ## Next Steps
@@ -115,3 +125,7 @@ MIT
 ## Author
 
 [@us_east_3](https://twitter.com/us_east_3)
+
+---
+
+![Pig Jarvis](pig-jarvis.png)
