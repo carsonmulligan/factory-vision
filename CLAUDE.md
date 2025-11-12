@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Factory Vision is a Python application that analyzes egocentric factory worker videos from the Egocentric-10K dataset on HuggingFace using GPT-4o-mini vision API to identify worker actions, tools, and safety compliance. The project emphasizes fast local loading and cost-effectiveness.
+Egocentric-10K Mini Explorer is a Python application for downloading and analyzing egocentric factory worker videos from the Egocentric-10K dataset. The project emphasizes fast downloads via direct tar file access and cost-effective GPT-4o-mini vision analysis. **The recommended workflow is: download clip 00 first, then test analysis on the first 30 seconds.**
 
 ## Environment Setup
 
@@ -19,22 +19,31 @@ Requires `.env` file with:
 - `OPENAI_API_KEY` - OpenAI API key for GPT-4o-mini vision
 - `HF_TOKEN` - HuggingFace token with dataset access for builddotai/Egocentric-10K
 
-**First-time setup:**
+**Quick start:**
 ```bash
+# 1. Download test clip (7 min, ~200MB, 10-15 sec)
 python preload_clips_direct.py
+
+# 2. Test analysis on first 30 seconds
+cd analysis && streamlit run app.py
 ```
-Downloads 5 sample clips locally (~30 seconds, only needed once). This enables instant app loading.
+
+**Download options:**
+- `python preload_clips_direct.py` - Just clip 00 (recommended for testing)
+- `python preload_clips_direct.py --all` - Download clips 0-5 (~3GB, 2-3 min)
 
 ## Running the Application
 
-**Interactive web interface (recommended):**
+**Interactive web app (recommended):**
 ```bash
+cd analysis
 streamlit run app.py
 ```
-Loads instantly from local clips, single-frame analysis with visual preview and real-time cost tracking.
+Analyzes first 30 seconds of clip 00 using GPT-4o-mini vision. Extracts frames at 10-second intervals and displays analysis with costs.
 
 **Batch processing pipeline:**
 ```bash
+cd analysis
 python main.py
 ```
 Streams clips from HuggingFace (slow initial load), processes 50 clips (configurable), outputs to `egocentric_analysis.json` with cost report.
@@ -45,13 +54,17 @@ The codebase follows a modular structure optimized for LLM navigation:
 
 ```
 .
+├── preload_clips_direct.py # MAIN: Download clips (direct tar access)
 ├── src/                    # Core library modules
 │   ├── config.py          # Configuration and cost constants
-│   ├── stream_sampler.py  # Dataset streaming and frame extraction
+│   ├── stream_sampler.py  # Frame extraction from videos
 │   └── vision_analyzer.py # OpenAI vision API integration
-├── app.py                 # Streamlit web interface (loads from local clips)
-├── main.py                # Batch processing pipeline (streams from HuggingFace)
-├── preload_clips.py       # One-time setup script
+├── analysis/              # Analysis tools
+│   ├── app.py            # Streamlit web app (tests first 30s of clip 00)
+│   └── main.py           # Batch processing pipeline
+├── sample_clips/          # Downloaded videos (gitignored)
+├── preload_clips_fast.py  # Alternative download method
+├── preload_clips.py       # Legacy download method
 └── requirements.txt       # Dependencies
 ```
 
@@ -71,30 +84,32 @@ The codebase follows a modular structure optimized for LLM navigation:
 
 **Executable scripts (root):**
 
-4. **app.py** - Streamlit web interface
-   - Loads from local `sample_clips/` directory for instant startup
+4. **preload_clips_direct.py** - Download utility (RECOMMENDED)
+   - CLI options: default (clip 00 only) or `--all` (clips 0-5)
+   - Downloads specific tar files directly from HuggingFace (~10-15 sec per clip)
+   - Clip 00: 7 minutes, ~200MB (recommended for testing)
+   - Clips 1-5: 20 minutes each, ~600MB each
+   - Saves to `sample_clips/` directory
+
+**Executable scripts (analysis/):**
+
+5. **analysis/app.py** - Streamlit web interface
+   - Loads clip_00.mp4 from `../sample_clips/`
+   - Analyzes ONLY first 30 seconds (frames at 5s, 15s, 25s intervals)
    - Single-frame analysis with visual preview
    - Real-time cost tracking
-   - Optional JSON append for saving results
+   - Configured specifically for quick testing
 
-5. **main.py** - Batch processing pipeline
-   - Streams MAX_CLIPS from HuggingFace dataset
+6. **analysis/main.py** - Batch processing pipeline
+   - Streams MAX_CLIPS from HuggingFace dataset (slow)
    - Extracts FRAMES_PER_CLIP frames per clip
    - Rate-limited API calls (0.1s delay)
    - Outputs JSON with factory_id, worker_id, frame-level analysis
 
-6. **preload_clips_direct.py** - Setup utility (recommended)
-   - Downloads 5 clips by directly fetching tar files from HuggingFace (fastest method)
-   - Saves both MP4 files and JSON metadata to `sample_clips/`
-   - Run once for fast app loading (~30 seconds)
+**Alternative download methods:**
 
-7. **preload_clips_fast.py** - Alternative setup utility
-   - Tries dataset viewer API first, falls back to streaming
-   - Slower than direct method due to dataset enumeration
-
-8. **preload_clips.py** - Legacy setup utility
-   - Original streaming method (slowest, 1-2 minutes)
-   - May experience timeouts with large datasets
+7. **preload_clips_fast.py** - Alternative: API with streaming fallback
+8. **preload_clips.py** - Legacy: Streaming only (slow, may timeout)
 
 ## Key Design Patterns
 

@@ -1,39 +1,45 @@
-# Factory Vision - Egocentric-10K Mini Explorer
+# Egocentric-10K Mini Explorer
 
-A lightweight Python app that streams random factory worker clips from the [Egocentric-10K dataset](https://huggingface.co/datasets/builddotai/Egocentric-10K), extracts frames, and uses GPT-4o-mini vision API to analyze worker actions, tools, and safety gear.
+Download and analyze egocentric factory worker videos from the [Egocentric-10K dataset](https://huggingface.co/datasets/builddotai/Egocentric-10K). Extract frames and use GPT-4o-mini vision API to analyze worker actions, tools, and safety compliance.
 
 ![Demo](demo.png)
 
+## Quick Start
+
+```bash
+# 1. Download a single test video (7 min, ~200MB)
+python preload_clips_direct.py
+
+# 2. Run analysis on first 30 seconds
+cd analysis && streamlit run app.py
+```
+
 ## Features
 
-- **Streaming-only** - No local video storage required
-- **Cost-effective** - Under $5 total with GPT-4o-mini
-- **Safety controls** - Rate limiting, token limits, JPEG compression
-- **Dual interface** - CLI batch processing + Streamlit web app
+- **Fast downloads** - Direct tar file downloads (~10-15 sec for test clip)
+- **Two download options** - Just clip 00 (7 min) or all clips (20 min each)
+- **Cost-effective** - GPT-4o-mini vision API (<$0.01 for test)
+- **Web interface** - Streamlit app for frame-by-frame analysis
 - **Real-time analysis** - Worker actions, tools, objects, safety gear detection
 
-## Dataset
+## About the Dataset
 
 This project uses the [Egocentric-10K dataset](https://huggingface.co/datasets/builddotai/Egocentric-10K) - a collection of first-person factory worker videos.
 
 ## Setup
 
-1. **Clone the repository**
+1. **Clone and install**
    ```bash
    git clone git@github.com:carsonmulligan/factory-vision.git
    cd factory-vision
-   ```
-
-2. **Create virtual environment and install dependencies**
-   ```bash
    python3 -m venv venv
    source venv/bin/activate
    pip install -r requirements.txt
    ```
 
-3. **Configure API keys**
+2. **Configure API keys**
 
-   Edit `.env` file with your credentials:
+   Create `.env` file with your credentials:
    ```
    OPENAI_API_KEY=your_openai_key_here
    HF_TOKEN=your_hf_token_here
@@ -43,33 +49,43 @@ This project uses the [Egocentric-10K dataset](https://huggingface.co/datasets/b
    - Get HuggingFace token: https://hf.co/settings/tokens
    - Accept dataset terms: https://huggingface.co/datasets/builddotai/Egocentric-10K
 
-4. **Download sample clips (for web app)**
+3. **Download video clips**
+
+   **Option A: Just test clip** (recommended first time)
    ```bash
    python preload_clips_direct.py
    ```
-   Downloads 5 clips locally (~30 seconds). Enables instant app loading.
+   Downloads clip 00 (7 min video, ~200MB, 10-15 seconds)
+
+   **Option B: All clips**
+   ```bash
+   python preload_clips_direct.py --all
+   ```
+   Downloads clips 0-5 (~3GB, 2-3 minutes)
 
 ## Usage
 
-### Batch Analysis Pipeline
+### Interactive Web App (Recommended)
 
-Process 50 random clips and save results to JSON:
+Test GPT-4o-mini vision analysis on first 30 seconds of clip 00:
 
 ```bash
+cd analysis
+streamlit run app.py
+```
+
+Click "Analyze Frame from Clip 00" to extract and analyze frames.
+
+### Batch Processing Pipeline
+
+Process multiple clips from HuggingFace (requires streaming):
+
+```bash
+cd analysis
 python main.py
 ```
 
 Output: `egocentric_analysis.json` with cost report
-
-### Interactive Web App
-
-Launch the Streamlit interface:
-
-```bash
-streamlit run app.py
-```
-
-Click "Load Random Worker Clip" to stream and analyze frames in real-time.
 
 ## Configuration
 
@@ -98,19 +114,28 @@ Edit `src/config.py` to adjust:
 ## Project Structure
 
 ```
-factory-vision/
+.
+├── preload_clips_direct.py # MAIN: Download clips (10-15 sec)
 ├── src/                    # Core library modules
 │   ├── config.py          # Configuration and cost tracking
-│   ├── stream_sampler.py  # Dataset streaming and frame extraction
-│   └── vision_analyzer.py # GPT-4o-mini vision API integration
-├── app.py                 # Streamlit web interface
-├── main.py                # Batch processing pipeline
-├── preload_clips_direct.py # Setup script (direct download, fastest)
-├── preload_clips_fast.py  # Setup script (streaming with fallback)
-├── preload_clips.py       # Setup script (streaming method, slowest)
+│   ├── stream_sampler.py  # Video frame extraction
+│   └── vision_analyzer.py # GPT-4o-mini vision API
+├── analysis/              # Analysis tools
+│   ├── app.py            # Streamlit web app (tests first 30s)
+│   └── main.py           # Batch processing pipeline
+├── sample_clips/          # Downloaded videos (gitignored)
 ├── requirements.txt       # Dependencies
 └── .env                   # API credentials (not committed)
 ```
+
+## Download Options Explained
+
+- **`preload_clips_direct.py`** - RECOMMENDED: Direct tar download (fastest)
+  - Default: Downloads clip 00 only (7 min, ~200MB)
+  - With `--all`: Downloads clips 0-5 (~3GB)
+
+- `preload_clips_fast.py` - Alternative: API with streaming fallback
+- `preload_clips.py` - Legacy: Streaming only (slow, may timeout)
 
 ## Next Steps
 

@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 import json
 import time
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from src.stream_sampler import stream_random_clips, extract_frames
 from src.vision_analyzer import analyze_frame
 from src.config import MAX_CLIPS, FRAMES_PER_CLIP

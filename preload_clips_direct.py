@@ -1,9 +1,13 @@
 """
 RECOMMENDED: Super fast clip preloader that downloads tar files directly from HuggingFace.
 Bypasses the slow dataset enumeration entirely by fetching specific tar files.
-Run once: python preload_clips_direct.py (~30 seconds for 5 clips)
+
+Usage:
+  python preload_clips_direct.py            # Download just clip 00 (7 min, ~200MB)
+  python preload_clips_direct.py --all      # Download clips 1-5 (20 min each, ~600MB each)
 """
 import os
+import sys
 import json
 import tarfile
 import requests
@@ -11,31 +15,36 @@ from io import BytesIO
 from src.config import HF_TOKEN
 
 CLIPS_DIR = "sample_clips"
-NUM_CLIPS = 5
 
-# Direct URLs to specific tar files (known to exist from dataset structure)
-# Each tar contains 1-2 clips, so we need multiple tars to get 5 clips
-TAR_URLS = [
-    "https://huggingface.co/datasets/builddotai/Egocentric-10K/resolve/main/factory_001/workers/worker_001/factory001_worker001_part00.tar",
+# Clip 00: Short 7-minute video (recommended for testing)
+CLIP_00_TAR = "https://huggingface.co/datasets/builddotai/Egocentric-10K/resolve/main/factory_001/workers/worker_001/factory001_worker001_part00.tar"
+
+# Clips 1-5: Longer 20-minute videos each
+CLIPS_1_5_TARS = [
     "https://huggingface.co/datasets/builddotai/Egocentric-10K/resolve/main/factory_002/workers/worker_001/factory002_worker001_part00.tar",
     "https://huggingface.co/datasets/builddotai/Egocentric-10K/resolve/main/factory_003/workers/worker_001/factory003_worker001_part00.tar",
     "https://huggingface.co/datasets/builddotai/Egocentric-10K/resolve/main/factory_004/workers/worker_001/factory004_worker001_part00.tar",
     "https://huggingface.co/datasets/builddotai/Egocentric-10K/resolve/main/factory_005/workers/worker_001/factory005_worker001_part00.tar",
 ]
 
-def preload_clips_direct():
+def preload_clips_direct(download_all=False):
     """Download clips by directly fetching tar files from HuggingFace."""
     os.makedirs(CLIPS_DIR, exist_ok=True)
 
-    print(f"Downloading clips directly from HuggingFace tar files...")
-    print("This should take <30 seconds")
+    # Select which clips to download
+    if download_all:
+        tar_urls = [CLIP_00_TAR] + CLIPS_1_5_TARS
+        print("Downloading ALL clips (clip 00 + clips 1-5)...")
+        print("Total: ~3GB, estimated time: 2-3 minutes")
+    else:
+        tar_urls = [CLIP_00_TAR]
+        print("Downloading clip 00 only (7 min video, recommended for testing)...")
+        print("Size: ~200MB, estimated time: 10-15 seconds")
 
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     clip_count = 0
 
-    for tar_url in TAR_URLS:
-        if clip_count >= NUM_CLIPS:
-            break
+    for tar_url in tar_urls:
 
         print(f"\n  Fetching {tar_url.split('/')[-1]}...")
 
@@ -63,9 +72,6 @@ def preload_clips_direct():
 
                 # Extract clips
                 for base_name, files in clips_in_tar.items():
-                    if clip_count >= NUM_CLIPS:
-                        break
-
                     if 'mp4' not in files or 'json' not in files:
                         continue
 
@@ -86,7 +92,8 @@ def preload_clips_direct():
                     with open(metadata_path, "w") as f:
                         json.dump(json_data, f, indent=2)
 
-                    print(f"  ✓ Saved clip {clip_count+1}/{NUM_CLIPS}: Worker {json_data.get('worker_id', 'unknown')}, Factory {json_data.get('factory_id', 'unknown')}")
+                    duration_min = json_data.get('duration_sec', 0) / 60
+                    print(f"  ✓ Saved clip {clip_count:02d}: Worker {json_data.get('worker_id', 'unknown')}, Factory {json_data.get('factory_id', 'unknown')} ({duration_min:.1f} min)")
                     clip_count += 1
 
         except Exception as e:
@@ -94,11 +101,23 @@ def preload_clips_direct():
             continue
 
     if clip_count > 0:
-        print(f"\n✓ Done! {clip_count} clips saved to {CLIPS_DIR}/")
-        print("Now run: streamlit run app.py")
+        print(f"\n✓ Done! {clip_count} clip(s) saved to {CLIPS_DIR}/")
+        if clip_count == 1:
+            print("\n📹 Quick test: Run the analysis on the first 30 seconds of clip 00")
+            print("   cd analysis && streamlit run app.py")
+        else:
+            print("\n📹 All clips downloaded! Run analysis:")
+            print("   cd analysis && streamlit run app.py")
     else:
         print("\n✗ Failed to download any clips")
         print("Please check your HF_TOKEN and try again")
 
 if __name__ == "__main__":
-    preload_clips_direct()
+    # Parse CLI arguments
+    download_all = "--all" in sys.argv or "-a" in sys.argv
+
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        sys.exit(0)
+
+    preload_clips_direct(download_all=download_all)
