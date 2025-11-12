@@ -1,5 +1,6 @@
 """
 STEPS
+0. copy and paste this into a code editor
 1. create a .env file 
 2. create a HF_TOKEN=...
 3. go to https://huggingface.co/settings/tokens and make a token 
