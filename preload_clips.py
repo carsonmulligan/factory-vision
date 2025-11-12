@@ -1,13 +1,14 @@
 """
-One-time script to download sample clips locally for fast Streamlit app loading.
-Run once: python preload_clips.py
+LEGACY: Original streaming-based clip downloader (slow, may timeout).
+Prefer preload_clips_direct.py for faster, more reliable downloads.
+Run: python preload_clips.py (~1-2 minutes for 5 clips, may timeout)
 """
 import os
 import json
 from src.stream_sampler import stream_random_clips
 
 CLIPS_DIR = "sample_clips"
-NUM_CLIPS = 10
+NUM_CLIPS = 5
 
 def preload_clips():
     """Download and save sample clips locally."""

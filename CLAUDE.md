@@ -21,9 +21,9 @@ Requires `.env` file with:
 
 **First-time setup:**
 ```bash
-python preload_clips.py
+python preload_clips_direct.py
 ```
-Downloads 10 sample clips locally (~1-2 minutes, only needed once). This enables instant app loading.
+Downloads 5 sample clips locally (~30 seconds, only needed once). This enables instant app loading.
 
 ## Running the Application
 
@@ -83,10 +83,18 @@ The codebase follows a modular structure optimized for LLM navigation:
    - Rate-limited API calls (0.1s delay)
    - Outputs JSON with factory_id, worker_id, frame-level analysis
 
-6. **preload_clips.py** - Setup utility
-   - Downloads 10 random clips from dataset to `sample_clips/`
-   - Saves both MP4 files and JSON metadata
-   - Run once for fast app loading
+6. **preload_clips_direct.py** - Setup utility (recommended)
+   - Downloads 5 clips by directly fetching tar files from HuggingFace (fastest method)
+   - Saves both MP4 files and JSON metadata to `sample_clips/`
+   - Run once for fast app loading (~30 seconds)
+
+7. **preload_clips_fast.py** - Alternative setup utility
+   - Tries dataset viewer API first, falls back to streaming
+   - Slower than direct method due to dataset enumeration
+
+8. **preload_clips.py** - Legacy setup utility
+   - Original streaming method (slowest, 1-2 minutes)
+   - May experience timeouts with large datasets
 
 ## Key Design Patterns
 

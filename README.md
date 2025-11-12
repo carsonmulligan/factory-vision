@@ -45,9 +45,9 @@ This project uses the [Egocentric-10K dataset](https://huggingface.co/datasets/b
 
 4. **Download sample clips (for web app)**
    ```bash
-   python preload_clips_fast.py
+   python preload_clips_direct.py
    ```
-   Downloads 10 clips locally (~30 seconds). Enables instant app loading.
+   Downloads 5 clips locally (~30 seconds). Enables instant app loading.
 
 ## Usage
 
@@ -105,8 +105,9 @@ factory-vision/
 │   └── vision_analyzer.py # GPT-4o-mini vision API integration
 ├── app.py                 # Streamlit web interface
 ├── main.py                # Batch processing pipeline
-├── preload_clips.py       # Setup script (streaming method)
-├── preload_clips_fast.py  # Setup script (API method, faster)
+├── preload_clips_direct.py # Setup script (direct download, fastest)
+├── preload_clips_fast.py  # Setup script (streaming with fallback)
+├── preload_clips.py       # Setup script (streaming method, slowest)
 ├── requirements.txt       # Dependencies
 └── .env                   # API credentials (not committed)
 ```
